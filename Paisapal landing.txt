@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>PaisaPal — Know Your Business Health in Seconds</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+        /* ================= GLOBAL ================= */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --green: #22c55e;
+            --green-glow: rgba(34,197,94,0.45);
+            --white: #ffffff;
+            --muted: #94a3b8;
+            --card-bg: rgba(255,255,255,0.04);
+            --border: rgba(255,255,255,0.08);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #080e18;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* ================= NOISE OVERLAY ================= */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        /* ================= GLOW BLOBS ================= */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .blob-1 {
+            width: 500px; height: 500px;
+            background: rgba(34,197,94,0.08);
+            top: -100px; left: -100px;
+            animation: blobFloat 12s ease-in-out infinite;
+        }
+        .blob-2 {
+            width: 400px; height: 400px;
+            background: rgba(59,130,246,0.06);
+            bottom: 200px; right: -100px;
+            animation: blobFloat 16s ease-in-out infinite reverse;
+        }
+
+        @keyframes blobFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, 40px) scale(1.05); }
+        }
+
+        /* ================= NAVIGATION ================= */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 22px 80px;
+            background: rgba(8,14,24,0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 22px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span { color: var(--green); }
+
+        .nav-links a {
+            margin-left: 35px;
+            text-decoration: none;
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: white; }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: var(--green);
+            color: black !important;
+            border-radius: 8px;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            box-shadow: 0 0 20px var(--green-glow);
+            transition: box-shadow 0.3s, transform 0.3s !important;
+        }
+
+        .nav-btn:hover {
+            box-shadow: 0 0 35px var(--green-glow) !important;
+            transform: translateY(-2px);
+        }
+
+        /* ================= HERO ================= */
+        .hero {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 160px 20px 120px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.25);
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-bottom: 30px;
+            letter-spacing: 0.5px;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(44px, 7vw, 80px);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 .highlight {
+            color: var(--green);
+            position: relative;
+        }
+
+        .hero p {
+            font-size: 19px;
+            color: var(--muted);
+            max-width: 520px;
+            margin: 0 auto 50px;
+            line-height: 1.7;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            padding: 16px 36px;
+            background: var(--green);
+            color: black;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: 12px;
+            transition: 0.3s ease;
+            box-shadow: 0 0 30px var(--green-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0 50px var(--green-glow);
+        }
+
+        .btn-outline {
+            padding: 16px 36px;
+            background: transparent;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: 0.3s ease;
+        }
+
+        .btn-outline:hover {
+            border-color: rgba(255,255,255,0.25);
+            transform: translateY(-4px);
+        }
+
+        /* ================= SCORE PREVIEW ================= */
+        .preview {
+            position: relative;
+            z-index: 1;
+            padding: 60px 20px 120px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard-mock {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 40px 50px;
+            border-radius: 24px;
+            max-width: 480px;
+            width: 100%;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .dashboard-mock .label {
+            font-size: 13px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .score-ring {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 4px solid var(--green);
+            box-shadow: 0 0 40px var(--green-glow), inset 0 0 30px rgba(34,197,94,0.06);
+            margin: 16px 0 24px;
+        }
+
+        .score-ring span {
+            font-family: 'Syne', sans-serif;
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--green);
+        }
+
+        .score-status {
+            color: var(--green);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 28px;
+        }
+
+        .mock-metrics {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .mock-metric {
+            flex: 1;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 10px;
+        }
+
+        .mock-metric .m-label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .mock-metric .m-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .mock-metric .m-value.green { color: var(--green); }
+        .mock-metric .m-value.red { color: #f87171; }
+
+        /* ================= FEATURES ================= */
+        .features {
+            position: relative;
+            z-index: 1;
+            padding: 120px 20px;
+            text-align: center;
+        }
+
+        .section-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--green);
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .features h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(30px, 5vw, 46px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 70px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 40px 30px;
+            border-radius: 20px;
+            text-align: left;
+            backdrop-filter: blur(10px);
+            transition: 0.35s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(34,197,94,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .feature-icon {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        /* ================= HOW IT WORKS ================= */
+        .how {
+            position: relative;
+            z-index: 1;
+            padding: 120px 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 60px auto 0;
+        }
+
+        .step {
+            flex: 1;
+            min-width: 220px;
+            padding: 0 30px;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -12px;
+            top: 28px;
+            color: var(--muted);
+            font-size: 20px;
+        }
+
+        .step-num {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 2px solid var(--green);
+            color: var(--green);
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .step h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .step p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* ================= ABOUT ================= */
+        .about {
+            position: relative;
+            z-index: 1;
+            padding: 120px 20px;
+            text-align: center;
+        }
+
+        .about h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+
+        .about p {
+            color: var(--muted);
+            max-width: 640px;
+            margin: 0 auto;
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        /* ================= CTA ================= */
+        .cta {
+            position: relative;
+            z-index: 1;
+            padding: 120px 20px;
+            text-align: center;
+        }
+
+        .cta-box {
+            background: var(--card-bg);
+            border: 1px solid rgba(34,197,94,0.2);
+            border-radius: 28px;
+            padding: 80px 40px;
+            max-width: 680px;
+            margin: 0 auto;
+            box-shadow: 0 0 80px rgba(34,197,94,0.06);
+        }
+
+        .cta-box h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(28px, 5vw, 48px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 18px;
+        }
+
+        .cta-box p {
+            color: var(--muted);
+            font-size: 17px;
+            margin-bottom: 40px;
+        }
+
+        /* ================= FOOTER ================= */
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 40px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ================= ANIMATIONS ================= */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 18px 24px; }
+            .nav-links { display: none; }
+            .hero { padding: 100px 20px 80px; }
+            .step:not(:last-child)::after { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <!-- NAV -->
+    <nav>
+        <div class="logo">Paisa<span>Pal</span> 💰</div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#how">How It Works</a>
+            <a href="#about">About</a>
+            <a href="https://paisapal-9q7mbp7eqhpgdeyrqxvgmq.streamlit.app/" class="nav-btn">Try Free →</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-badge">✦ AI Copilot for Indian MSMEs</div>
+        <h1>Know Your Business<br/><span class="highlight">Health in Seconds.</span></h1>
+        <p>Upload your transactions. PaisaPal instantly reads your numbers and tells you exactly where you stand — in plain language.</p>
+        <div class="hero-cta">
+            <a href="https://paisapal-9q7mbp7eqhpgdeyrqxvgmq.streamlit.app/" class="btn-primary">Try PaisaPal Free →</a>
+            <a href="#features" class="btn-outline">See Features</a>
+        </div>
+    </section>
+
+    <!-- SCORE PREVIEW -->
+    <section class="preview">
+        <div class="dashboard-mock fade-up">
+            <div class="label">Business Health Score</div>
+            <div class="score-ring">
+                <span>78</span>
+            </div>
+            <div class="score-status">✦ Stable — Monitor Key Areas</div>
+            <div class="mock-metrics">
+                <div class="mock-metric">
+                    <div class="m-label">Inflow</div>
+                    <div class="m-value green">₹4.8L</div>
+                </div>
+                <div class="mock-metric">
+                    <div class="m-label">Outflow</div>
+                    <div class="m-value red">₹3.2L</div>
+                </div>
+                <div class="mock-metric">
+                    <div class="m-label">Net</div>
+                    <div class="m-value green">₹1.6L</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+        <div class="section-label">What PaisaPal does</div>
+        <h2 class="fade-up">Your numbers.<br/>Explained simply.</h2>
+        <div class="feature-grid">
+            <div class="feature-card fade-up">
+                <div class="feature-icon">📊</div>
+                <h3>Health Score</h3>
+                <p>Get a single score that reflects your cash flow, expense structure, and revenue stability — no CA needed.</p>
+            </div>
+            <div class="feature-card fade-up">
+                <div class="feature-icon">💬</div>
+                <h3>Ask PaisaPal</h3>
+                <p>Ask anything in plain Hindi or English. "Mera paisa kahan ja raha hai?" — and get a real answer.</p>
+            </div>
+            <div class="feature-card fade-up">
+                <div class="feature-icon">⚠️</div>
+                <h3>Risk Alerts</h3>
+                <p>Spot dangers early — high expense burn, revenue dependency, or declining cash trend.</p>
+            </div>
+            <div class="feature-card fade-up">
+                <div class="feature-icon">🛣️</div>
+                <h3>Cash Runway</h3>
+                <p>Know exactly how many days your business can sustain at current performance levels.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how" id="how">
+        <div class="section-label">Simple as it gets</div>
+        <h2 class="fade-up" style="font-family:'Syne',sans-serif;font-size:clamp(30px,5vw,46px);font-weight:800;letter-spacing:-1px;">How It Works</h2>
+        <div class="steps">
+            <div class="step fade-up">
+                <div class="step-num">1</div>
+                <h3>Upload CSV</h3>
+                <p>Export your bank statement or transaction file as a CSV.</p>
+            </div>
+            <div class="step fade-up">
+                <div class="step-num">2</div>
+                <h3>Instant Analysis</h3>
+                <p>PaisaPal reads your data and calculates your health score in seconds.</p>
+            </div>
+            <div class="step fade-up">
+                <div class="step-num">3</div>
+                <h3>Ask Anything</h3>
+                <p>Chat with PaisaPal about your numbers in plain language.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about" id="about">
+        <div class="section-label">Our Mission</div>
+        <h2 class="fade-up">Built for the backbone<br/>of India's economy.</h2>
+        <p class="fade-up">63 million MSMEs power India — but most owners manage finances by gut feeling alone. PaisaPal gives every small business owner the clarity of a financial advisor, without the cost.</p>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <div class="cta-box fade-up">
+            <h2>Ready to understand<br/>your business?</h2>
+            <p>Free to use. No signup needed. Just upload and go.</p>
+            <a href="https://paisapal-9q7mbp7eqhpgdeyrqxvgmq.streamlit.app/" class="btn-primary">Try PaisaPal Now →</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>© 2024 PaisaPal · Built for Indian MSMEs 🇮🇳</p>
+    </footer>
+
+    <script>
+        // Fade-up scroll animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(el => {
+                if (el.isIntersecting) {
+                    el.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15 });
+
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
